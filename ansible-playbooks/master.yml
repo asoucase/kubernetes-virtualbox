@@ -1,0 +1,28 @@
+---
+- import_playbook: common.yml
+
+- hosts: all
+  tasks:
+  - name: Initialise kubernetes master
+    shell: kubeadm init
+  
+  - name: Create kube folder in vagrant home
+    file:
+      path: /home/vagrant/.kube/
+      state: directory
+      owner: vagrant
+      group: vagrant
+
+  - name: Copy credentials to vagrant user
+    file: 
+      src: /etc/kubernetes/admin.conf
+      dest: /home/vagrant/.kube/config
+      owner: vagrant
+      group: vagrant
+      state: link
+    
+  - name: Set KUBECONFIG env var
+    shell: export KUBECONFIG=/etc/kubernetes/admin.conf
+
+  - name: Install WaveNet
+    shell:  kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"

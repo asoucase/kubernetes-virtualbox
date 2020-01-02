@@ -1,11 +1,33 @@
 ---
 - hosts: all
   tasks:
-    - name: apt update & upgrade
-      apt: 
-        upgrade: yes
+    - name: Add google apt key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add kubernetes apt repo
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+
+    - name: Install docker and kubernetes
+      apt:
+        name:
+        - apt-transport-https
+        - docker.io
+        - kubelet
+        - kubeadm
+        - kubernetes-cni
         state: latest
-        autoremove: yes
         update_cache: yes
-
-
+    
+    - name: Hold kubernetes packages
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: 
+        - kubelet
+        - kubeadm
+        - kubernetes-cni
+        - kubectl
