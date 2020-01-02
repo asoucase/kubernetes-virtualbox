@@ -1,0 +1,11 @@
+---
+- hosts: all
+  tasks:
+    - name: apt update & upgrade
+      apt: 
+        upgrade: yes
+        state: latest
+        autoremove: yes
+        update_cache: yes
+
+
