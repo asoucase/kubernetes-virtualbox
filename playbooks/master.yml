@@ -4,8 +4,13 @@
 - hosts: all
   tasks:
   - name: Initialise kubernetes master
-    shell: kubeadm init
-  
+    shell: kubeadm init --apiserver-advertise-address=192.168.56.10  # static ip provided in vagrantfile
+    register: init
+
+  - name: Display to screen
+    debug:
+      msg: "{{ init }}"
+
   - name: Create kube folder in vagrant home
     file:
       path: /home/vagrant/.kube/
@@ -24,9 +29,9 @@
   - name: Set KUBECONFIG env var
     shell: export KUBECONFIG=/etc/kubernetes/admin.conf
 
-  - name: Install WaveWorks (CNI)
+  - name: Install Flannel
     become_user: vagrant
-    shell:  kubectl apply -f https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')
+    shell:  kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
   - name: Create join script
     become_user: vagrant
@@ -37,5 +42,3 @@
     copy:
       content: "{{ join_cmd.stdout }}"
       dest: /etc/kubeadm_join.sh
-
-

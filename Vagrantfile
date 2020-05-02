@@ -1,36 +1,33 @@
+machines = [
+    {"name" => "master",    "ip" => "192.168.56.10", "cpus" => 4, "memory" => 2 * 1024, "playbook" => "master.yml"},
+    {"name" => "node1", 	"ip" => "192.168.56.11", "cpus" => 4, "memory" => 2 * 1024, "playbook" => "common.yml"},
+    {"name" => "node2", 	"ip" => "192.168.56.12", "cpus" => 4, "memory" => 2 * 1024, "playbook" => "common.yml"},
+    {"name" => "node3", 	"ip" => "192.168.56.13", "cpus" => 4, "memory" => 2 * 1024, "playbook" => "common.yml"},
+]
+
 Vagrant.configure("2") do |config|
-    config.vm.box = "ubuntu/bionic64"  # Default box
+    config.vm.box = "ubuntu/bionic64"
     config.ssh.forward_agent = true
+    config.ssh.insert_key = false
 
-    # Set Master machine
-    config.vm.define "master" do |master|
-        master.vm.network "private_network", ip: "192.168.56.10"
-        master.vm.hostname = "master"
+    # Build each vm
+    machines.each do |item|
+        config.vm.define "#{item['name']}" do |machine|
+            machine.vm.network "private_network", ip: "#{item['ip']}"
+            machine.vm.hostname = "#{item['name']}"
 
-        # Set vm name
-        master.vm.provider :virtualbox do |vb|
-            vb.name = "master  - 192.168.56.10"
-        end
+            # Set virtual machine name, cpu, memory and add hard drive (if applicable)
+            machine.vm.provider :virtualbox do |vb|
+                vb.name = "#{item['name']} - #{item['ip']}"
+                vb.cpus = item['cpus']
+                vb.memory = item['memory']
+            end
 
-        # Run ansible playbook
-        master.vm.provision "ansible_local" do |ansible|
-            ansible.become = true
-            ansible.playbook = "ansible-playbooks/master.yml"
-        end
-    end
-
-    # Set Node 1
-    config.vm.define "node_1" do |node_1|
-        node_1.vm.network "private_network", ip: "192.168.56.11"
-        node_1.vm.hostname = "node1"
-
-        node_1.vm.provider :virtualbox do |vb|
-            vb.name = "node1 - 192.168.56.11"
-        end
-
-        node_1.vm.provision "ansible_local" do |ansible|
-            ansible.become = true
-            ansible.playbook = "ansible-playbooks/common.yml"
+            # Run ansible playbook
+            machine.vm.provision "ansible_local" do |ansible|
+                ansible.become = true
+                ansible.playbook = "playbooks/#{item['playbook']}"
+            end
         end
     end
 end

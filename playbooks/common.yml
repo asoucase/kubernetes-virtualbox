@@ -31,3 +31,10 @@
         - kubeadm
         - kubernetes-cni
         - kubectl
+
+    - name: Enable docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+        daemon-reload: yes
