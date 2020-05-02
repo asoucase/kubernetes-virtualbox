@@ -4,8 +4,13 @@
 - hosts: all
   tasks:
   - name: Initialise kubernetes master
-    shell: kubeadm init
-  
+    shell: kubeadm init --apiserver-advertise-address=192.168.56.10  # static ip provided in vagrantfile
+    register: init
+
+  - name: Display to screen
+    debug:
+      msg: "{{ init }}"
+
   - name: Create kube folder in vagrant home
     file:
       path: /home/vagrant/.kube/
