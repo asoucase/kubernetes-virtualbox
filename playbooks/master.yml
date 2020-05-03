@@ -4,7 +4,7 @@
 - hosts: all
   tasks:
   - name: Initialise kubernetes master
-    shell: kubeadm init --apiserver-advertise-address=192.168.56.10  # static ip provided in vagrantfile
+    shell: kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address=192.168.56.10  # static ip provided in vagrantfile
     register: init
 
   - name: Display to screen
@@ -29,9 +29,9 @@
   - name: Set KUBECONFIG env var
     shell: export KUBECONFIG=/etc/kubernetes/admin.conf
 
-  - name: Install Flannel
+  - name: Install pod network
     become_user: vagrant
-    shell:  kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+    shell:  kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
 
   - name: Create join script
     become_user: vagrant
