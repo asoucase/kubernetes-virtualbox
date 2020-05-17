@@ -4,7 +4,7 @@
 - hosts: all
   tasks:
   - name: Initialise kubernetes master
-    shell: kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address=192.168.56.10  # static ip provided in vagrantfile
+    shell: kubeadm init --pod-network-cidr=172.16.0.0/16 --apiserver-advertise-address=192.168.56.10 --apiserver-cert-extra-sans=192.168.56.10 # static ip provided in vagrantfile
     register: init
 
   - name: Display to screen
@@ -29,9 +29,14 @@
   - name: Set KUBECONFIG env var
     shell: export KUBECONFIG=/etc/kubernetes/admin.conf
 
+  - name: Copy calico yaml
+    copy:
+      src: calico.yaml
+      dest: /tmp/calico.yaml
+
   - name: Install pod network
     become_user: vagrant
-    shell:  kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
+    shell:  kubectl apply -f /tmp/calico.yaml
 
   - name: Create join script
     become_user: vagrant

@@ -32,6 +32,11 @@
         - kubernetes-cni
         - kubectl
 
+    - name: Copy docker config
+      copy:
+        src: daemon.json
+        dest: /etc/docker/daemon.json
+
     - name: Enable docker service
       systemd:
         name: docker
