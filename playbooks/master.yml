@@ -4,7 +4,10 @@
 - hosts: all
   tasks:
   - name: Initialise kubernetes master
-    shell: kubeadm init --pod-network-cidr=172.16.0.0/16 --apiserver-advertise-address=192.168.56.10 --apiserver-cert-extra-sans=192.168.56.10 # static ip provided in vagrantfile
+    shell:
+      "kubeadm init --pod-network-cidr=192.168.112.0/20
+      --apiserver-advertise-address={{ hostvars[inventory_hostname]['ansible_enp0s8']['ipv4']['address'] }}
+      --apiserver-cert-extra-sans={{ hostvars[inventory_hostname]['ansible_enp0s8']['ipv4']['address'] }}"
     register: init
 
   - name: Display to screen
@@ -13,21 +16,18 @@
 
   - name: Create kube folder in vagrant home
     file:
-      path: /home/vagrant/.kube/
+      path: /root/.kube/
       state: directory
       owner: vagrant
       group: vagrant
 
   - name: Copy credentials to vagrant user
-    file: 
+    file:
       src: /etc/kubernetes/admin.conf
-      dest: /home/vagrant/.kube/config
+      dest: /root/.kube/config
       owner: vagrant
       group: vagrant
       state: link
-    
-  - name: Set KUBECONFIG env var
-    shell: export KUBECONFIG=/etc/kubernetes/admin.conf
 
   - name: Copy calico yaml
     copy:
@@ -35,14 +35,12 @@
       dest: /tmp/calico.yaml
 
   - name: Install pod network
-    become_user: vagrant
     shell:  kubectl apply -f /tmp/calico.yaml
 
   - name: Create join script
-    become_user: vagrant
     shell: kubeadm token create --print-join-command # >> /etc/kubeadm_join_cmd.sh
     register: join_cmd
-  
+
   - name: Create join shell script
     copy:
       content: "{{ join_cmd.stdout }}"

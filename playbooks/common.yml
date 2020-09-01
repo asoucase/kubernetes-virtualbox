@@ -11,14 +11,22 @@
         repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
         state: present
 
-    - name: Install docker and kubernetes
+    - name: Download docker script
+      get_url:
+        url: https://get.docker.com
+        dest: /tmp/get-docker.sh
+
+    - name: Install docker
+      shell: chmod +x /tmp/get-docker.sh && /tmp/get-docker.sh
+
+    - name: Install kubeadm
       apt:
         name:
         - apt-transport-https
-        - docker.io
+        - curl
         - kubelet
         - kubeadm
-        - kubernetes-cni
+        - kubectl
         state: latest
         update_cache: yes
     
@@ -29,7 +37,6 @@
       loop: 
         - kubelet
         - kubeadm
-        - kubernetes-cni
         - kubectl
 
     - name: Copy docker config
@@ -37,12 +44,22 @@
         src: daemon.json
         dest: /etc/docker/daemon.json
 
-    - name: Configure kubelet
-      shell: export KUBELET_EXTRA_ARGS=--node-ip=192.168.56.10
-
     - name: Enable docker service
       systemd:
         name: docker
         state: started
+        enabled: yes
+        daemon-reload: yes
+
+    - name: Set node ip in kubelet config
+      lineinfile:
+        path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+        line: "Environment=\"KUBELET_EXTRA_ARGS\"=--node-ip={{ hostvars[inventory_hostname]['ansible_enp0s8']['ipv4']['address'] }}"
+        state: present
+
+    - name: Restart kubelet service
+      systemd:
+        name: kubelet
+        state: restarted
         enabled: yes
         daemon-reload: yes
