@@ -1,0 +1,13 @@
+---
+- import_playbook: common.yml
+
+- hosts: all
+  tasks:
+    - name: Copy join script
+      copy:
+        src: kubeadm_join.sh
+        dest: /tmp/kubeadm_join.sh
+        mode: 0760
+
+    - name: Run join script
+      shell: /tmp/kubeadm_join.sh

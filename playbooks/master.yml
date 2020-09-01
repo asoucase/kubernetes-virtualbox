@@ -45,3 +45,6 @@
     copy:
       content: "{{ join_cmd.stdout }}"
       dest: /etc/kubeadm_join.sh
+
+  - name: Copy join shell script to local
+    local_action: copy content="{{ join_cmd.stdout }}" dest="./kubeadm_join.sh"
